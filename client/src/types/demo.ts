@@ -51,3 +51,11 @@ export type DemoWatermarkResponse = {
   ceiling_overlay_base64?: string;
   ceiling_corners?: number[][];
 };
+
+export type OrderCheckoutResponse = {
+  order_id: string;
+  checkout_url: string;
+  amount_cents: number;
+  currency: string;
+  image_count: number;
+};

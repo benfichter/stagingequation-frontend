@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type DemoConfig, type DemoUser, type DemoWatermarkResponse, type Dimensions } from "@/types/demo";
+import { Textarea } from "@/components/ui/textarea";
+import { type DemoConfig, type DemoUser, type DemoWatermarkResponse, type Dimensions, type OrderCheckoutResponse } from "@/types/demo";
 import { useToast } from "@/hooks/use-toast";
 
 const steps = [
@@ -18,9 +19,11 @@ const steps = [
   { id: 3, label: "Configure" },
   { id: 4, label: "Calibration" },
   { id: 5, label: "Results" },
+  { id: 6, label: "Place Order" },
 ];
 
 const USER_STORAGE_KEY = "stagingEquationUser";
+const PRICE_PER_IMAGE = 10;
 
 const buildApiUrl = (path: string) => {
   const base = import.meta.env.VITE_API_BASE || "/api";
@@ -39,6 +42,9 @@ export default function Home() {
   const [stagedImageUrl, setStagedImageUrl] = useState<string | null>(null);
   const [dimensions, setDimensions] = useState<Dimensions | null>(null);
   const [calibrationOverlayUrl, setCalibrationOverlayUrl] = useState<string | null>(null);
+  const [orderFiles, setOrderFiles] = useState<File[]>([]);
+  const [orderNote, setOrderNote] = useState("");
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [user, setUser] = useState<DemoUser | null>(() => {
     if (typeof window === "undefined") {
       return null;
@@ -65,6 +71,8 @@ export default function Home() {
     accountForm.firmName.trim().length > 0 &&
     accountForm.name.trim().length > 0 &&
     accountForm.email.trim().length > 0;
+  const orderImageCount = orderFiles.length;
+  const orderTotal = orderImageCount * PRICE_PER_IMAGE;
 
   const handleCreateAccount = async () => {
     if (!accountForm.firmName.trim() || !accountForm.name.trim() || !accountForm.email.trim()) {
@@ -130,6 +138,8 @@ export default function Home() {
     setStagedImageUrl(null);
     setDimensions(null);
     setCalibrationOverlayUrl(null);
+    setOrderFiles([]);
+    setOrderNote("");
     setAccountForm({
       firmName: "",
       name: "",
@@ -257,6 +267,8 @@ export default function Home() {
     setStagedImageUrl(null);
     setDimensions(null);
     setCalibrationOverlayUrl(null);
+    setOrderFiles([]);
+    setOrderNote("");
   };
 
   const handleGenerateAnother = () => {
@@ -264,6 +276,77 @@ export default function Home() {
     setStagedImageUrl(null);
     setDimensions(null);
     setCalibrationOverlayUrl(null);
+  };
+
+  const handleOrderFilesChange = (files: FileList | null) => {
+    if (!files) {
+      setOrderFiles([]);
+      return;
+    }
+    setOrderFiles(Array.from(files));
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!user) {
+      toast({
+        title: "Account required",
+        description: "Create an account before placing an order.",
+        variant: "destructive",
+      });
+      setCurrentStep(1);
+      return;
+    }
+
+    if (orderFiles.length === 0) {
+      toast({
+        title: "Add images",
+        description: "Upload at least one room image for your order.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmittingOrder(true);
+    try {
+      const formData = new FormData();
+      formData.append("user_id", user.id);
+      if (orderNote.trim()) {
+        formData.append("note", orderNote.trim());
+      }
+      orderFiles.forEach((file) => formData.append("files", file));
+
+      const response = await fetch(buildApiUrl("/orders/checkout"), {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        let message = text || "Unable to start checkout.";
+        try {
+          const parsed = JSON.parse(text) as { detail?: string };
+          message = parsed.detail || message;
+        } catch {
+          // keep fallback message
+        }
+        throw new Error(message);
+      }
+
+      const payload = (await response.json()) as OrderCheckoutResponse;
+      if (!payload.checkout_url) {
+        throw new Error("Checkout URL missing.");
+      }
+
+      window.location.href = payload.checkout_url;
+    } catch (error: any) {
+      toast({
+        title: "Order error",
+        description: error.message || "Unable to place order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmittingOrder(false);
+    }
   };
 
   return (
@@ -470,7 +553,97 @@ export default function Home() {
               dimensions={dimensions}
               onStartOver={handleStartOver}
               onGenerateAnother={handleGenerateAnother}
+              onPlaceOrder={() => setCurrentStep(6)}
             />
+          </div>
+        )}
+
+        {currentStep === 6 && (
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="text-center">
+              <h1 className="text-4xl font-semibold mb-4">Place Your Order</h1>
+              <p className="text-muted-foreground">
+                Upload the rooms you want staged, add a note for our team, and checkout at $10 per image.
+              </p>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Order Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="order-files">Room images</Label>
+                  <Input
+                    id="order-files"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(event) => handleOrderFilesChange(event.target.files)}
+                    data-testid="input-order-files"
+                  />
+                  {orderFiles.length > 0 ? (
+                    <div className="text-sm text-muted-foreground">
+                      {orderFiles.length} image{orderFiles.length === 1 ? "" : "s"} selected.
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      Add all the rooms you want staged in this order.
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="order-note">Notes for our team (optional)</Label>
+                  <Textarea
+                    id="order-note"
+                    placeholder="Example: Keep the living room neutral, add staging for a family-friendly feel."
+                    value={orderNote}
+                    onChange={(event) => setOrderNote(event.target.value)}
+                    data-testid="input-order-note"
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <Card className="border-dashed">
+                    <CardContent className="pt-6 space-y-1">
+                      <p className="text-xs uppercase text-muted-foreground">Price per image</p>
+                      <p className="text-2xl font-semibold">${PRICE_PER_IMAGE.toFixed(2)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-dashed">
+                    <CardContent className="pt-6 space-y-1">
+                      <p className="text-xs uppercase text-muted-foreground">Images</p>
+                      <p className="text-2xl font-semibold">{orderImageCount}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-dashed">
+                    <CardContent className="pt-6 space-y-1">
+                      <p className="text-xs uppercase text-muted-foreground">Total</p>
+                      <p className="text-2xl font-semibold">${orderTotal.toFixed(2)}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={handleSubmitOrder}
+                    className="h-12"
+                    disabled={isSubmittingOrder || orderFiles.length === 0}
+                    data-testid="button-submit-order"
+                  >
+                    {isSubmittingOrder ? "Redirecting to checkout..." : "Pay & Submit Order"}
+                  </Button>
+                  <Button variant="outline" onClick={() => setCurrentStep(5)} className="h-12">
+                    Back to Results
+                  </Button>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Orders are delivered after payment. We keep your original resolution—no upscaling promises.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         )}
       </main>

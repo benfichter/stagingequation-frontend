@@ -8,6 +8,7 @@ interface ResultsViewProps {
   dimensions?: Dimensions | null;
   onStartOver?: () => void;
   onGenerateAnother?: () => void;
+  onPlaceOrder?: () => void;
 }
 
 export default function ResultsView({
@@ -15,6 +16,7 @@ export default function ResultsView({
   dimensions,
   onStartOver,
   onGenerateAnother,
+  onPlaceOrder,
 }: ResultsViewProps) {
   const convertToFeet = (meters: number) => {
     return (meters * 3.28084).toFixed(2);
@@ -101,6 +103,11 @@ export default function ResultsView({
           <Sparkles className="w-4 h-4" />
           Generate Another
         </Button>
+        {onPlaceOrder ? (
+          <Button onClick={onPlaceOrder} className="gap-2" data-testid="button-place-order">
+            Place Order
+          </Button>
+        ) : null}
       </div>
     </div>
   );
