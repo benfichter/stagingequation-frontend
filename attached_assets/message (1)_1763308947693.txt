@@ -1,0 +1,556 @@
+# 🏠 Real Estate Staging API Documentation
+
+## Overview
+
+RESTful API for automated real estate staging that combines:
+- **MoGe AI** - Room dimension detection
+- **Gemini AI** - Professional image generation
+
+Upload an empty room photo, get back professionally furnished images with accurate dimensions.
+
+## Base URL
+
+```
+http://localhost:5000
+```
+
+## Authentication
+
+Currently no authentication required. Set `GEMINI_API_KEY` environment variable on server.
+
+---
+
+## Endpoints
+
+### 1. Health Check
+
+**GET** `/health`
+
+Check API status and model availability.
+
+#### Response
+
+```json
+{
+  "status": "healthy",
+  "device": "cuda",
+  "moge_loaded": true,
+  "gemini_loaded": true
+}
+```
+
+---
+
+### 2. Full Staging (Dimensions + Image)
+
+**POST** `/stage`
+
+Upload image and get room dimensions + professionally staged image.
+
+#### Request
+
+**Content-Type:** `multipart/form-data`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `image` | File | ✅ Yes | Room image (JPG, PNG, JPEG) |
+| `style_prompt` | String | ❌ No | Styling instructions (default: modern minimal) |
+| `return_format` | String | ❌ No | `'base64'` or `'url'` (default: `'base64'`) |
+
+#### Example Request (Python)
+
+```python
+import requests
+
+with open('room.jpg', 'rb') as f:
+    files = {'image': f}
+    data = {
+        'style_prompt': 'Modern living room with neutral colors',
+        'return_format': 'base64'
+    }
+    response = requests.post('http://localhost:5000/stage', files=files, data=data)
+
+result = response.json()
+print(result)
+```
+
+#### Example Request (cURL)
+
+```bash
+curl -X POST http://localhost:5000/stage \
+  -F "image=@room.jpg" \
+  -F "style_prompt=Modern minimal bedroom" \
+  -F "return_format=base64"
+```
+
+#### Example Request (JavaScript)
+
+```javascript
+const formData = new FormData();
+formData.append('image', fileInput.files[0]);
+formData.append('style_prompt', 'Cozy living room');
+formData.append('return_format', 'url');
+
+fetch('http://localhost:5000/stage', {
+  method: 'POST',
+  body: formData
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+#### Success Response (200 OK)
+
+```json
+{
+  "success": true,
+  "request_id": "a3f2e1d9-4b5c-6d7e-8f9a-0b1c2d3e4f5a",
+  "timestamp": "2025-11-16T15:30:45.123Z",
+  "original_image": {
+    "width": 1024,
+    "height": 768
+  },
+  "dimensions": {
+    "height": 2.4,
+    "width": 4.25,
+    "depth": 5.8,
+    "area": 24.65,
+    "unit": "meters"
+  },
+  "staged_image": "base64_encoded_string_or_url",
+  "style_prompt": "Modern minimal bedroom",
+  "processing_time_seconds": 45.2
+}
+```
+
+#### Error Response (400/500)
+
+```json
+{
+  "success": false,
+  "error": "Error message description"
+}
+```
+
+---
+
+### 3. Dimensions Only
+
+**POST** `/dimensions-only`
+
+Get only room dimensions without generating staged image (faster, cheaper).
+
+#### Request
+
+**Content-Type:** `multipart/form-data`
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `image` | File | ✅ Yes | Room image (JPG, PNG, JPEG) |
+
+#### Example Request (Python)
+
+```python
+import requests
+
+with open('room.jpg', 'rb') as f:
+    files = {'image': f}
+    response = requests.post('http://localhost:5000/dimensions-only', files=files)
+
+dimensions = response.json()
+print(dimensions)
+```
+
+#### Example Request (cURL)
+
+```bash
+curl -X POST http://localhost:5000/dimensions-only \
+  -F "image=@room.jpg"
+```
+
+#### Success Response (200 OK)
+
+```json
+{
+  "success": true,
+  "dimensions": {
+    "height": 2.4,
+    "width": 4.25,
+    "depth": 5.8,
+    "area": 24.65,
+    "unit": "meters"
+  }
+}
+```
+
+---
+
+### 4. Get Generated Image
+
+**GET** `/outputs/<filename>`
+
+Retrieve a previously generated image (when using `return_format='url'`).
+
+#### Example Request
+
+```bash
+curl http://localhost:5000/outputs/a3f2e1d9-4b5c-6d7e-8f9a-0b1c2d3e4f5a_staged.png \
+  --output staged_room.png
+```
+
+#### Response
+
+Returns PNG image file.
+
+---
+
+## Return Formats
+
+### Base64 Format
+
+The staged image is returned as a base64-encoded string in the JSON response.
+
+**Pros:**
+- ✅ Single request/response
+- ✅ No file storage needed
+- ✅ Easy to embed in web pages
+
+**Cons:**
+- ❌ Larger response size
+- ❌ Must decode before use
+
+**Example Usage:**
+
+```python
+import base64
+from PIL import Image
+from io import BytesIO
+
+# Get response
+response = requests.post(url, files=files, data={'return_format': 'base64'})
+result = response.json()
+
+# Decode and save
+image_data = base64.b64decode(result['staged_image'])
+image = Image.open(BytesIO(image_data))
+image.save('staged_room.png')
+```
+
+### URL Format
+
+The staged image is saved on the server and a URL is returned.
+
+**Pros:**
+- ✅ Smaller JSON response
+- ✅ Direct image URL
+- ✅ Can share link
+
+**Cons:**
+- ❌ Requires file storage
+- ❌ Needs cleanup mechanism
+- ❌ Extra request to download
+
+**Example Usage:**
+
+```python
+# Get response
+response = requests.post(url, files=files, data={'return_format': 'url'})
+result = response.json()
+
+# Download image
+image_url = f"http://localhost:5000{result['staged_image']}"
+image_response = requests.get(image_url)
+
+with open('staged_room.png', 'wb') as f:
+    f.write(image_response.content)
+```
+
+---
+
+## Style Prompts
+
+The `style_prompt` parameter allows you to customize the staging style.
+
+### Example Prompts
+
+**Living Room:**
+```
+Modern minimal living room with neutral gray sofa, coffee table,
+area rug, and warm accent lighting
+```
+
+**Bedroom:**
+```
+Cozy master bedroom with queen bed, matching nightstands,
+soft bedding, and warm ambient lighting
+```
+
+**Office:**
+```
+Professional home office with ergonomic desk, comfortable chair,
+organized shelving, and natural light
+```
+
+**Dining Room:**
+```
+Elegant dining room with wooden table, 6 chairs,
+simple centerpiece, and pendant lighting
+```
+
+### Prompt Guidelines
+
+- ✅ Be specific about furniture types
+- ✅ Mention color preferences
+- ✅ Specify lighting style
+- ✅ Include room function
+- ❌ Don't request architectural changes
+- ❌ Don't ask for unrealistic elements
+
+---
+
+## Error Codes
+
+| Code | Meaning | Common Causes |
+|------|---------|---------------|
+| 200 | Success | Request completed successfully |
+| 400 | Bad Request | Invalid file, missing image, wrong format |
+| 500 | Server Error | Model error, processing failure, API quota |
+
+### Common Errors
+
+**"No image file provided"**
+- Ensure the file parameter is named `image`
+- Check file is attached to request
+
+**"Invalid file type"**
+- Only JPG, PNG, JPEG allowed
+- Check file extension
+
+**"Could not detect room dimensions"**
+- Image too dark or blurry
+- Room not clearly visible
+- Try different photo angle
+
+**"Generation error"**
+- Gemini API quota exceeded
+- API key invalid or expired
+- Model unavailable in region
+
+---
+
+## Rate Limits
+
+Current implementation has no rate limits. For production:
+
+- Recommend: 10 requests/minute per IP
+- Max file size: 16MB
+- Processing time: 30-60 seconds per request
+
+---
+
+## Best Practices
+
+### Image Quality
+
+**Good Images:**
+- ✅ Well-lit room
+- ✅ Straight walls (not fisheye)
+- ✅ Full room visible
+- ✅ 1000+ pixels width
+- ✅ Empty or minimally furnished
+
+**Bad Images:**
+- ❌ Too dark
+- ❌ Extreme fisheye distortion
+- ❌ Partial room view
+- ❌ Low resolution (<500px)
+- ❌ Under construction
+
+### API Usage
+
+1. **Use `/dimensions-only` first** if you only need measurements
+2. **Use `return_format='url'`** for large batches to reduce response size
+3. **Implement retry logic** for 500 errors
+4. **Cache results** by image hash to avoid duplicate processing
+5. **Clean up output files** periodically
+
+### Style Prompts
+
+1. **Keep prompts concise** (1-2 sentences)
+2. **Focus on style, not structure** (no "add a window")
+3. **Use realistic descriptions** (no fantasy elements)
+4. **Match room type** (don't put a bed in a kitchen)
+
+---
+
+## Complete Example Workflow
+
+### Python Client
+
+```python
+import requests
+import base64
+from PIL import Image
+from io import BytesIO
+
+API_URL = "http://localhost:5000"
+
+def stage_room(image_path, style):
+    """Complete workflow: upload image, get dimensions + staged image"""
+
+    # Upload and process
+    with open(image_path, 'rb') as f:
+        files = {'image': f}
+        data = {
+            'style_prompt': style,
+            'return_format': 'base64'
+        }
+        response = requests.post(f"{API_URL}/stage", files=files, data=data)
+
+    result = response.json()
+
+    if not result['success']:
+        print(f"Error: {result['error']}")
+        return None
+
+    # Print dimensions
+    dims = result['dimensions']
+    print(f"Room: {dims['width']}m × {dims['depth']}m × {dims['height']}m")
+    print(f"Area: {dims['area']}m²")
+
+    # Save staged image
+    image_data = base64.b64decode(result['staged_image'])
+    image = Image.open(BytesIO(image_data))
+    output_path = f"staged_{result['request_id']}.png"
+    image.save(output_path)
+
+    print(f"Staged image saved: {output_path}")
+    return result
+
+# Use it
+stage_room('my_room.jpg', 'Modern minimal living room')
+```
+
+### JavaScript/React Example
+
+```javascript
+async function stageRoom(imageFile, stylePrompt) {
+  const formData = new FormData();
+  formData.append('image', imageFile);
+  formData.append('style_prompt', stylePrompt);
+  formData.append('return_format', 'base64');
+
+  try {
+    const response = await fetch('http://localhost:5000/stage', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Display dimensions
+      console.log('Dimensions:', result.dimensions);
+
+      // Display staged image
+      const imgElement = document.getElementById('staged-image');
+      imgElement.src = `data:image/png;base64,${result.staged_image}`;
+
+      return result;
+    } else {
+      console.error('Error:', result.error);
+    }
+  } catch (error) {
+    console.error('Request failed:', error);
+  }
+}
+```
+
+---
+
+## Deployment
+
+### Local Development
+
+```bash
+# Set API key
+export GEMINI_API_KEY='your-api-key'
+
+# Install dependencies
+pip install -r requirements_api.txt
+
+# Run server
+python api.py
+```
+
+### Production Deployment
+
+**Using Gunicorn:**
+
+```bash
+gunicorn -w 4 -b 0.0.0.0:5000 api:app --timeout 120
+```
+
+**Using Docker:**
+
+```dockerfile
+FROM python:3.10
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements_api.txt
+ENV GEMINI_API_KEY=your-key
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "api:app", "--timeout", "120"]
+```
+
+---
+
+## Support & Troubleshooting
+
+### Server Won't Start
+
+```bash
+# Check if port is in use
+lsof -i :5000
+
+# Use different port
+python api.py --port 8080
+```
+
+### Models Not Loading
+
+```bash
+# Check CUDA
+python -c "import torch; print(torch.cuda.is_available())"
+
+# Check API key
+echo $GEMINI_API_KEY
+```
+
+### Low Performance
+
+- Use GPU (CUDA) for MoGe
+- Increase worker count (Gunicorn)
+- Add Redis caching for dimensions
+- Use CDN for output images
+
+---
+
+## API Limits & Quotas
+
+**File Upload:**
+- Max size: 16MB
+- Formats: JPG, PNG, JPEG
+
+**Processing:**
+- Timeout: 120 seconds
+- Concurrent requests: Limited by workers
+
+**Storage:**
+- Outputs cleaned after 24 hours (recommended)
+- Inputs deleted immediately after processing
+
+---
+
+**API Version:** 1.0
+**Last Updated:** November 2025
+**Powered by:** MoGe-2 + Gemini 2.5 Flash Image
