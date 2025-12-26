@@ -445,6 +445,7 @@ export default function Home() {
                   imageUrl={calibrationOverlayUrl}
                   isProcessing={false}
                   actionLabel="Continue to Results"
+                  dimensions={dimensions}
                   onGenerateStaging={handleContinueToResults}
                 />
               </>

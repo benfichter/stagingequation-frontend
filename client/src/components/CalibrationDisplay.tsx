@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Ruler } from "lucide-react";
+import { type Dimensions } from "@/types/demo";
 
 type CeilingMeasurement = {
   from: string;
@@ -14,6 +15,7 @@ interface CalibrationDisplayProps {
   isProcessing?: boolean;
   onGenerateStaging?: () => void;
   actionLabel?: string;
+  dimensions?: Dimensions | null;
 }
 
 export default function CalibrationDisplay({ 
@@ -21,10 +23,15 @@ export default function CalibrationDisplay({
   measurements = [],
   isProcessing = false, 
   onGenerateStaging,
-  actionLabel = "Continue"
+  actionLabel = "Continue",
+  dimensions
 }: CalibrationDisplayProps) {
   const convertToFeet = (meters: number) => {
     return (meters * 3.28084).toFixed(2);
+  };
+
+  const convertToSquareFeet = (squareMeters: number) => {
+    return (squareMeters * 10.7639).toFixed(2);
   };
 
   const formatMeasurementLabel = (from: string, to: string) => {
@@ -68,6 +75,45 @@ export default function CalibrationDisplay({
           </CardContent>
         </Card>
       )}
+
+      {dimensions ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Ruler className="w-5 h-5" />
+              Room Dimensions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Width</p>
+                <p className="text-lg font-semibold" data-testid="text-calibration-width">
+                  {dimensions.width.toFixed(2)}m ({convertToFeet(dimensions.width)}ft)
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Depth</p>
+                <p className="text-lg font-semibold" data-testid="text-calibration-depth">
+                  {dimensions.depth.toFixed(2)}m ({convertToFeet(dimensions.depth)}ft)
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Height</p>
+                <p className="text-lg font-semibold" data-testid="text-calibration-height">
+                  {dimensions.height.toFixed(2)}m ({convertToFeet(dimensions.height)}ft)
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Area</p>
+                <p className="text-lg font-semibold" data-testid="text-calibration-area">
+                  {dimensions.area.toFixed(2)}m2 ({convertToSquareFeet(dimensions.area)}ft2)
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
       
       {!isProcessing && onGenerateStaging && (
         <div className="flex justify-center">
