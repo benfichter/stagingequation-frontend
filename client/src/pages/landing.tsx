@@ -210,35 +210,52 @@ export default function Landing() {
               description="Upload the rooms you want staged, add any notes, and checkout at $0.01 per image."
               submitLabel="Pay & Submit Order"
             />
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-4">
-                    <CardTitle>Account Summary</CardTitle>
-                    <Badge variant="outline">Studio Beta</Badge>
+            <Card>
+              <CardHeader>
+                <CardTitle>Reading Queue</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm text-muted-foreground">
+                {savedQueue.length === 0 ? (
+                  <p>Save posts to build a queue for your next staging sprint.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {savedQueue.map((post) => (
+                      <div key={post.id} className="rounded-lg border bg-muted/20 p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{post.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {post.readTime} | {post.tags[0]}
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleSaved(post.id)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </CardHeader>
-                <CardContent className="grid gap-2 text-sm text-muted-foreground">
-                  <div>
-                    <span className="text-foreground font-medium">Firm:</span> {user.firm_name}
+                )}
+
+                <div className="rounded-lg border bg-background p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Prompt of the day
                   </div>
-                  <div>
-                    <span className="text-foreground font-medium">Name:</span> {user.name}
-                  </div>
-                  <div>
-                    <span className="text-foreground font-medium">Email:</span> {user.email}
-                  </div>
-                  {user.phone ? (
-                    <div>
-                      <span className="text-foreground font-medium">Phone:</span> {user.phone}
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            </div>
+                  <p className="text-sm text-muted-foreground">
+                    "Warm modern living room, layered neutrals, statement lighting, clear walkway to balcony."
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <div id="studio-journal" className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div id="studio-journal" className="space-y-6">
             <Card>
               <CardHeader className="space-y-4">
                 <div className="flex items-start justify-between gap-4">
@@ -289,7 +306,7 @@ export default function Landing() {
                           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                             <Badge variant="secondary">{post.tags[0]}</Badge>
                             <span>{post.readTime} read</span>
-                            <span>•</span>
+                            <span>|</span>
                             <span>{post.date}</span>
                           </div>
                           {isRead ? (
@@ -332,50 +349,6 @@ export default function Landing() {
                 )}
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Reading Queue</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm text-muted-foreground">
-                {savedQueue.length === 0 ? (
-                  <p>Save posts to build a queue for your next staging sprint.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {savedQueue.map((post) => (
-                      <div key={post.id} className="rounded-lg border bg-muted/20 p-3 space-y-2">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-medium text-foreground">{post.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {post.readTime} • {post.tags[0]}
-                            </p>
-                          </div>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => toggleSaved(post.id)}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="rounded-lg border bg-background p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    Prompt of the day
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    "Warm modern living room, layered neutrals, statement lighting, clear walkway to balcony."
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           <OrderHistory user={user} />
@@ -383,6 +356,7 @@ export default function Landing() {
       </div>
     );
   }
+
 
   const features = [
     {
