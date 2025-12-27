@@ -1,12 +1,112 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Settings, Sparkles, ArrowRight, Check, UserPlus, Download } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Upload, Settings, Sparkles, ArrowRight, Check, UserPlus, Download, LogOut } from "lucide-react";
 import { Link } from "wouter";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
+import OrderForm from "@/components/OrderForm";
+import OrderHistory from "@/components/OrderHistory";
+import { type DemoUser } from "@/types/demo";
 import emptyRoomImage from "@assets/stock_images/empty_room_interior__c37a1a01.jpg";
 import stagedRoomImage from "@assets/stock_images/beautifully_staged_l_3025d9c3.jpg";
 
 export default function Landing() {
+  const [user, setUser] = useState<DemoUser | null>(null);
+  const USER_STORAGE_KEY = "stagingEquationUser";
+  const baseApi = import.meta.env.VITE_API_BASE || "/api";
+  const apiBase = baseApi.endsWith("/") ? baseApi.slice(0, -1) : baseApi;
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const stored = localStorage.getItem(USER_STORAGE_KEY);
+    if (!stored) {
+      return;
+    }
+    try {
+      setUser(JSON.parse(stored) as DemoUser);
+    } catch {
+      setUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    const warmMoge = async () => {
+      try {
+        await fetch(`${apiBase}/moge/warm`, { method: "POST" });
+      } catch {
+        // ignore warmup errors
+      }
+    };
+    warmMoge();
+  }, [user?.id, apiBase]);
+
+  const handleClearAccount = () => {
+    localStorage.removeItem(USER_STORAGE_KEY);
+    setUser(null);
+  };
+
+  if (user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <section className="border-b bg-muted/40">
+          <div className="max-w-5xl mx-auto px-4 py-12 space-y-6 text-center">
+            <h1 className="text-4xl sm:text-5xl font-semibold">Welcome back, {user.name}</h1>
+            <p className="text-muted-foreground text-lg">
+              Place a staging order or start a fresh demo whenever you need it.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button asChild size="lg">
+                <Link href="/staging">Run a New Demo</Link>
+              </Button>
+              <Button variant="outline" size="lg" onClick={handleClearAccount} className="gap-2">
+                <LogOut className="w-4 h-4" />
+                Switch Account
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section className="max-w-5xl mx-auto px-4 py-12 space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-2 text-sm text-muted-foreground">
+              <div>
+                <span className="text-foreground font-medium">Firm:</span> {user.firm_name}
+              </div>
+              <div>
+                <span className="text-foreground font-medium">Name:</span> {user.name}
+              </div>
+              <div>
+                <span className="text-foreground font-medium">Email:</span> {user.email}
+              </div>
+              {user.phone ? (
+                <div>
+                  <span className="text-foreground font-medium">Phone:</span> {user.phone}
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <OrderForm
+            user={user}
+            title="Place a New Order"
+            description="Upload the rooms you want staged, add any notes, and checkout at $9.50 per image."
+            submitLabel="Pay & Submit Order"
+          />
+
+          <OrderHistory user={user} />
+        </section>
+      </div>
+    );
+  }
+
   const features = [
     {
       icon: UserPlus,

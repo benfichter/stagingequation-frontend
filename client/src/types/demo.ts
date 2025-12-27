@@ -59,3 +59,13 @@ export type OrderCheckoutResponse = {
   currency: string;
   image_count: number;
 };
+
+export type OrderListItem = {
+  id: string;
+  status: string;
+  note?: string | null;
+  image_count: number;
+  amount_cents: number;
+  currency: string;
+  created_at: string;
+};

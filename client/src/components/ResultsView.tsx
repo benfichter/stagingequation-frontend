@@ -27,10 +27,27 @@ export default function ResultsView({
   };
 
   const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = stagedImageUrl;
-    link.download = 'staged-room.jpg';
-    link.click();
+    const downloadImage = async () => {
+      try {
+        const response = await fetch(stagedImageUrl);
+        if (!response.ok) {
+          throw new Error("Download failed");
+        }
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = "staged-room.jpg";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(blobUrl);
+      } catch {
+        window.open(stagedImageUrl, "_blank", "noopener");
+      }
+    };
+
+    void downloadImage();
   };
 
   return (
