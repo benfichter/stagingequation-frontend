@@ -24,6 +24,8 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isPaying, setIsPaying] = useState(false);
+  const [payError, setPayError] = useState("");
 
   useEffect(() => {
     if (!orderId) {
@@ -55,6 +57,25 @@ export default function OrderDetailPage() {
   const statusInfo = order ? statusMap[order.status] || { label: order.status, tone: "secondary" } : null;
   const uploads = order?.uploads ?? [];
 
+  const handleResumePayment = async () => {
+    if (!order) {
+      return;
+    }
+    setIsPaying(true);
+    setPayError("");
+    try {
+      const response = await fetch(buildApiUrl(`/orders/${order.id}/checkout`), { method: "POST" });
+      if (!response.ok) {
+        throw new Error("Unable to resume payment");
+      }
+      const data = (await response.json()) as { checkout_url: string };
+      window.location.href = data.checkout_url;
+    } catch {
+      setPayError("Unable to open checkout. Please try again.");
+      setIsPaying(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <section className="max-w-6xl mx-auto px-4 py-10 space-y-6">
@@ -66,9 +87,16 @@ export default function OrderDetailPage() {
             </h1>
             <p className="text-sm text-muted-foreground">Details, status, and uploaded images.</p>
           </div>
-          <Button variant="outline" asChild>
-            <Link href="/">Back to Dashboard</Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {order?.status === "pending_payment" ? (
+              <Button onClick={handleResumePayment} disabled={isPaying}>
+                {isPaying ? "Opening checkout..." : "Pay for this order"}
+              </Button>
+            ) : null}
+            <Button variant="outline" asChild>
+              <Link href="/">Back to Dashboard</Link>
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -90,6 +118,11 @@ export default function OrderDetailPage() {
                   <p className="text-xs uppercase text-muted-foreground">Status</p>
                   {statusInfo ? <Badge variant={statusInfo.tone}>{statusInfo.label}</Badge> : null}
                 </div>
+                {payError ? (
+                  <div className="sm:col-span-2 text-xs text-destructive">
+                    {payError}
+                  </div>
+                ) : null}
                 <div className="space-y-1">
                   <p className="text-xs uppercase text-muted-foreground">Placed</p>
                   <p className="text-foreground">{new Date(order.created_at).toLocaleString()}</p>
