@@ -498,7 +498,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             <OrderForm
               user={user}
-              description="Upload the rooms you want staged, add a note for our team, and checkout at $9.50 per image."
+              description="Upload the rooms you want staged, add a note for our team, and checkout at $0.01 per image."
               onBack={() => setCurrentStep(5)}
               submitLabel="Pay & Submit Order"
             />

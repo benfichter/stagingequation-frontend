@@ -29,7 +29,7 @@ interface OrderFormProps {
 
 export default function OrderForm({
   user,
-  pricePerImage = 9.5,
+  pricePerImage = 0.01,
   title = "Place Your Order",
   description = "Upload the rooms you want staged, add a note for our team, and checkout.",
   submitLabel = "Pay & Submit Order",
