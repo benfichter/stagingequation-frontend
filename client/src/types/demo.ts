@@ -33,6 +33,8 @@ export type UploadRecord = {
   id: string;
   storage_url: string;
   download_url?: string | null;
+  original_filename?: string | null;
+  content_type?: string | null;
 };
 
 export type Dimensions = {
@@ -68,4 +70,17 @@ export type OrderListItem = {
   amount_cents: number;
   currency: string;
   created_at: string;
+};
+
+export type OrderDetail = {
+  id: string;
+  user_id: string;
+  status: string;
+  note?: string | null;
+  image_count: number;
+  amount_cents: number;
+  currency: string;
+  stripe_session_id?: string | null;
+  created_at: string;
+  uploads: UploadRecord[];
 };

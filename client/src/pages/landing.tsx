@@ -538,7 +538,7 @@ export default function Landing() {
       <footer className="border-t py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center text-sm text-muted-foreground">
-            <p>© 2025 Staging Equation. All rights reserved.</p>
+            <p>(c) 2025 Staging Equation. All rights reserved.</p>
           </div>
         </div>
       </footer>
