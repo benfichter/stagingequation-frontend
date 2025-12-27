@@ -53,6 +53,7 @@ export default function OrderDetailPage() {
 
   const total = order ? (order.amount_cents / 100).toFixed(2) : "0.00";
   const statusInfo = order ? statusMap[order.status] || { label: order.status, tone: "secondary" } : null;
+  const uploads = order?.uploads ?? [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -121,11 +122,11 @@ export default function OrderDetailPage() {
                 <CardTitle>Order Images</CardTitle>
               </CardHeader>
               <CardContent>
-                {order.uploads.length === 0 ? (
+                {uploads.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No images attached to this order yet.</p>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {order.uploads.map((upload, index) => {
+                    {uploads.map((upload, index) => {
                       const imageUrl = upload.download_url || upload.storage_url;
                       const label = upload.original_filename || `Order image ${index + 1}`;
                       return (
