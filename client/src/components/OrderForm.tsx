@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { type DemoUser, type OrderCheckoutResponse } from "@/types/demo";
 import { buildApiUrl } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -23,9 +23,9 @@ interface OrderFormProps {
 
 export default function OrderForm({
   user,
-  pricePerImage = 0.01,
+  pricePerImage = 4,
   title = "Place Your Order",
-  description = "Upload the rooms you want staged, add a note for our team, and checkout.",
+  description = "Upload the rooms you want staged, add a note for our team, and checkout at $4 per image.",
   submitLabel = "Pay & Submit Order",
   onBack,
   onCancel,
@@ -34,8 +34,10 @@ export default function OrderForm({
   const [orderFiles, setOrderFiles] = useState<{ file: File; url: string }[]>([]);
   const [orderNote, setOrderNote] = useState("");
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const orderImageCount = orderFiles.length;
   const orderTotal = orderImageCount * pricePerImage;
@@ -52,6 +54,28 @@ export default function OrderForm({
       url: URL.createObjectURL(file),
     }));
     setOrderFiles(nextFiles);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    if (event.dataTransfer.files?.length) {
+      handleOrderFilesChange(event.dataTransfer.files);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleSubmitOrder = async () => {
@@ -146,14 +170,39 @@ export default function OrderForm({
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="order-files">Room images</Label>
-            <Input
+            <input
+              ref={fileInputRef}
               id="order-files"
               type="file"
               multiple
               accept="image/*"
+              className="hidden"
               onChange={(event) => handleOrderFilesChange(event.target.files)}
               data-testid="input-order-files"
             />
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={handleBrowseClick}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  handleBrowseClick();
+                }
+              }}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              className={cn(
+                "min-h-40 w-full rounded-lg border-2 border-dashed px-6 py-8 text-center transition cursor-pointer",
+                isDragging ? "border-primary bg-accent/40" : "border-border"
+              )}
+            >
+              <p className="text-lg font-semibold text-foreground">Upload your images</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Drag and drop multiple rooms here, or click to browse.
+              </p>
+              <p className="text-xs text-muted-foreground mt-3">JPG or PNG, up to 10MB each.</p>
+            </div>
             {orderFiles.length > 0 ? (
               <div className="text-sm text-muted-foreground">
                 {orderFiles.length} image{orderFiles.length === 1 ? "" : "s"} selected.

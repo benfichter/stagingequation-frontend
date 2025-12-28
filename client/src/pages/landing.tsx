@@ -3,12 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   ArrowRight,
   BookOpen,
-  Bookmark,
   Check,
-  Download,
   LogOut,
   Settings,
   Sparkles,
@@ -21,80 +20,57 @@ import OrderForm from "@/components/OrderForm";
 import OrderHistory from "@/components/OrderHistory";
 import { type DemoUser } from "@/types/demo";
 import { buildApiUrl } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import PromoBanner from "@/components/PromoBanner";
 import emptyRoomImage from "@assets/stock_images/1.jpeg";
 import stagedRoomImage from "@assets/stock_images/1_Staged.png";
 
-const BLOG_TAGS = ["All", "Workflow", "Design", "AI Tips", "Pricing"];
+const USER_STORAGE_KEY = "stagingEquationUser";
 
-const BLOG_POSTS = [
+const features = [
   {
-    id: "thirty-minute-brief",
-    title: "The 30-Min Staging Brief",
-    tags: ["Workflow"],
-    readTime: "5 min",
-    author: "Studio Desk",
-    date: "Today",
-    excerpt:
-      "Turn client notes into a crisp staging brief that keeps every render aligned with the listing story.",
+    icon: UserPlus,
+    title: "Create Account",
+    description: "Set up a secure account in seconds",
   },
   {
-    id: "texture-stacks",
-    title: "Texture Stacks That Sell",
-    tags: ["Design"],
-    readTime: "4 min",
-    author: "Esha from Styling",
-    date: "Yesterday",
-    excerpt:
-      "Layer rugs, textiles, and wood grains so rooms feel curated but still easy for buyers to imagine.",
+    icon: Upload,
+    title: "Upload",
+    description: "Add a photo of your empty room",
   },
   {
-    id: "prompting-open-floor",
-    title: "Prompting for Open Floor Plans",
-    tags: ["AI Tips"],
-    readTime: "6 min",
-    author: "AI Lab",
-    date: "2 days ago",
-    excerpt:
-      "Use spatial cues and focal anchors in your prompts to keep wide-open layouts cohesive.",
+    icon: Settings,
+    title: "Prompt",
+    description: "Choose a style and guide the AI with a prompt",
   },
   {
-    id: "micro-pricing",
-    title: "Pricing Micro-Staging Bundles",
-    tags: ["Pricing"],
-    readTime: "3 min",
-    author: "Ops Notebook",
-    date: "This week",
-    excerpt:
-      "Bundle kitchens and living rooms together to improve conversion without adding friction.",
+    icon: BookOpen,
+    title: "Deliver",
+    description: "Share a watermarked preview, then order finals",
   },
+];
+
+const benefits = [
+  "$4 per image New Year special through January 7",
+  "Watermarked demo previews for quick sharing",
+  "Room type and style controls",
+  "Prompt-guided furnishing suggestions",
+  "Resolution matches your original upload",
 ];
 
 export default function Landing() {
   const [user, setUser] = useState<DemoUser | null>(null);
-  const USER_STORAGE_KEY = "stagingEquationUser";
-  const [activeBlogTag, setActiveBlogTag] = useState(BLOG_TAGS[0]);
-  const [blogQuery, setBlogQuery] = useState("");
-  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
-  const [readPosts, setReadPosts] = useState<Record<string, boolean>>({});
-
-  const normalizedQuery = blogQuery.trim().toLowerCase();
-  const filteredPosts = BLOG_POSTS.filter((post) => {
-    const matchesTag = activeBlogTag === "All" || post.tags.includes(activeBlogTag);
-    if (!normalizedQuery) {
-      return matchesTag;
-    }
-    const searchable = `${post.title} ${post.excerpt} ${post.author}`.toLowerCase();
-    return matchesTag && searchable.includes(normalizedQuery);
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [signupForm, setSignupForm] = useState({
+    firmName: "",
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
   });
-  const savedQueue = BLOG_POSTS.filter((post) => savedPosts[post.id]);
-
-  const toggleSaved = (postId: string) => {
-    setSavedPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
-  };
-
-  const toggleRead = (postId: string) => {
-    setReadPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
-  };
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -130,222 +106,178 @@ export default function Landing() {
     setUser(null);
   };
 
+  const handleLogin = async () => {
+    if (!loginForm.email.trim() || !loginForm.password) {
+      toast({
+        title: "Missing details",
+        description: "Email and password are required to log in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoggingIn(true);
+    try {
+      const response = await fetch(buildApiUrl("/auth/login"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: loginForm.email.trim(),
+          password: loginForm.password,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        let message = text || "Unable to log in.";
+        try {
+          const parsed = JSON.parse(text) as { detail?: string };
+          message = parsed.detail || message;
+        } catch {
+          // keep fallback message
+        }
+        throw new Error(message);
+      }
+
+      const loggedInUser = (await response.json()) as DemoUser;
+      setUser(loggedInUser);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(loggedInUser));
+      toast({
+        title: "Welcome back",
+        description: "Your dashboard is ready.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Unable to log in. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleSignup = async () => {
+    if (!signupForm.firmName.trim() || !signupForm.name.trim() || !signupForm.email.trim()) {
+      toast({
+        title: "Missing details",
+        description: "Firm name, name, and email are required to create an account.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (signupForm.password.length < 8) {
+      toast({
+        title: "Password too short",
+        description: "Use at least 8 characters for your password.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSigningUp(true);
+    try {
+      const response = await fetch(buildApiUrl("/users"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firm_name: signupForm.firmName.trim(),
+          name: signupForm.name.trim(),
+          email: signupForm.email.trim(),
+          phone: signupForm.phone.trim() || null,
+          password: signupForm.password,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        let message = text || "Unable to create account.";
+        try {
+          const parsed = JSON.parse(text) as { detail?: string };
+          message = parsed.detail || message;
+        } catch {
+          // keep fallback message
+        }
+        throw new Error(message);
+      }
+
+      const createdUser = (await response.json()) as DemoUser;
+      setUser(createdUser);
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(createdUser));
+      toast({
+        title: "Account created",
+        description: "Welcome to your dashboard.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Account error",
+        description: error.message || "Unable to create account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSigningUp(false);
+    }
+  };
+
   if (user) {
     return (
       <div className="min-h-screen bg-background">
-        <section className="border-b bg-muted/40">
-          <div className="max-w-6xl mx-auto px-4 py-10">
-            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="space-y-6">
-                <Badge variant="outline" className="w-fit gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  Studio online
-                </Badge>
-                <div className="space-y-2">
-                  <h1 className="text-4xl sm:text-5xl font-semibold">Welcome back, {user.name}</h1>
-                  <p className="text-muted-foreground text-lg">
-                    Build quick demos, keep the queue moving, and ship confident staging to clients.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <Button asChild size="lg">
-                    <Link href="/staging">Run a New Demo</Link>
-                  </Button>
-                  <Button variant="secondary" size="lg" asChild>
-                    <a href="#studio-journal">Jump to Journal</a>
-                  </Button>
-                  <Button variant="outline" size="lg" onClick={handleClearAccount} className="gap-2">
-                    <LogOut className="w-4 h-4" />
-                    Switch Account
-                  </Button>
-                </div>
-              </div>
-              <Card className="border-border/60 bg-background/80">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Quick guide</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Three steps to keep the dashboard simple.
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-muted-foreground">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                      1
-                    </div>
-                    <div>
-                      <p className="text-foreground font-medium">Run a demo</p>
-                      <p>Generate a watermarked preview with your client notes.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                      2
-                    </div>
-                    <div>
-                      <p className="text-foreground font-medium">Upload and checkout</p>
-                      <p>Use the order form below to submit final rooms.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                      3
-                    </div>
-                    <div>
-                      <p className="text-foreground font-medium">Track orders</p>
-                      <p>See paid and delivered work in your order history.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        <PromoBanner />
+        <header className="border-b bg-background/95">
+          <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                Dashboard
+              </Badge>
+              <span className="text-sm text-muted-foreground">Welcome back, {user.name}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/">Dashboard</Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/journal">Journal</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/staging">Run Demo</Link>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleClearAccount} className="gap-2">
+                <LogOut className="h-4 w-4" />
+                Switch Account
+              </Button>
             </div>
           </div>
-        </section>
+        </header>
 
         <section className="max-w-6xl mx-auto px-4 py-10 space-y-10">
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
             <OrderForm
               user={user}
-              title="Place a New Order"
-              description="Upload the rooms you want staged, add any notes, and checkout at $0.01 per image."
+              title="Upload Your Images"
+              description="Submit your rooms for final staging and checkout at $4 per image."
               submitLabel="Pay & Submit Order"
             />
             <Card>
               <CardHeader>
-                <CardTitle>Reading Queue</CardTitle>
+                <CardTitle>Quick guide</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 text-sm text-muted-foreground">
-                {savedQueue.length === 0 ? (
-                  <p>Save posts to build a queue for your next staging sprint.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {savedQueue.map((post) => (
-                      <div key={post.id} className="rounded-lg border bg-muted/20 p-3 space-y-2">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-medium text-foreground">{post.title}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {post.readTime} | {post.tags[0]}
-                            </p>
-                          </div>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => toggleSaved(post.id)}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="rounded-lg border bg-background p-4 space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    Prompt of the day
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    "Warm modern living room, layered neutrals, statement lighting, clear walkway to balcony."
-                  </p>
+                <div className="space-y-2">
+                  <p className="text-foreground font-medium">1. Upload your rooms</p>
+                  <p>Add the spaces you want staged to your order.</p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div id="studio-journal" className="space-y-6">
-            <Card>
-              <CardHeader className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-primary" />
-                      Studio Journal
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Sample blog posts to spark your next staging concept.
-                    </p>
-                  </div>
-                  <Badge variant="outline">{filteredPosts.length} posts</Badge>
+                <div className="space-y-2">
+                  <p className="text-foreground font-medium">2. Checkout</p>
+                  <p>Pay once and our team begins the final staging.</p>
                 </div>
-                <div className="space-y-3">
-                  <Input
-                    value={blogQuery}
-                    onChange={(event) => setBlogQuery(event.target.value)}
-                    placeholder="Search the journal..."
-                  />
-                  <div className="flex flex-wrap gap-2">
-                    {BLOG_TAGS.map((tag) => (
-                      <Button
-                        key={tag}
-                        type="button"
-                        size="sm"
-                        variant={activeBlogTag === tag ? "default" : "outline"}
-                        onClick={() => setActiveBlogTag(tag)}
-                      >
-                        {tag}
-                      </Button>
-                    ))}
-                  </div>
+                <div className="space-y-2">
+                  <p className="text-foreground font-medium">3. Track delivery</p>
+                  <p>See order status and download links in history.</p>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {filteredPosts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No posts match that filter. Try another tag or search.
-                  </p>
-                ) : (
-                  filteredPosts.map((post) => {
-                    const isSaved = Boolean(savedPosts[post.id]);
-                    const isRead = Boolean(readPosts[post.id]);
-                    return (
-                      <div key={post.id} className="rounded-lg border bg-muted/20 p-4 space-y-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                            <Badge variant="secondary">{post.tags[0]}</Badge>
-                            <span>{post.readTime} read</span>
-                            <span>|</span>
-                            <span>{post.date}</span>
-                          </div>
-                          {isRead ? (
-                            <Badge variant="outline" className="gap-1">
-                              <Check className="h-3 w-3" />
-                              Read
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="text-base font-semibold">{post.title}</h3>
-                          <p className="text-sm text-muted-foreground">{post.excerpt}</p>
-                        </div>
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <span className="text-xs text-muted-foreground">by {post.author}</span>
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={isSaved ? "default" : "outline"}
-                              onClick={() => toggleSaved(post.id)}
-                              className="gap-2"
-                            >
-                              <Bookmark className="h-4 w-4" />
-                              {isSaved ? "Saved" : "Save"}
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => toggleRead(post.id)}
-                            >
-                              {isRead ? "Mark unread" : "Mark read"}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+                <Button variant="secondary" asChild className="w-full">
+                  <Link href="/staging">Run a new demo</Link>
+                </Button>
               </CardContent>
             </Card>
           </div>
@@ -356,41 +288,22 @@ export default function Landing() {
     );
   }
 
-
-  const features = [
-    {
-      icon: UserPlus,
-      title: "Create Account",
-      description: "Create your demo account in seconds"
-    },
-    {
-      icon: Upload,
-      title: "Upload",
-      description: "Add a photo of your empty room"
-    },
-    {
-      icon: Settings,
-      title: "Prompt",
-      description: "Choose a style and guide the AI with a prompt"
-    },
-    {
-      icon: Download,
-      title: "Download Demo",
-      description: "Get a watermarked staging preview to share"
-    }
-  ];
-
-  const benefits = [
-    "Watermarked demo previews for quick sharing",
-    "Professional staging in minutes",
-    "Room type and style controls",
-    "Prompt-guided furnishing suggestions",
-    "Resolution matches your original upload"
-  ];
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
+      <PromoBanner />
+      <header className="border-b bg-background/95">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-foreground">Staging Equation</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/journal">Journal</Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href="#auth">Login</a>
+            </Button>
+          </div>
+        </div>
+      </header>
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-background" />
         <div className="relative max-w-6xl mx-auto px-4 py-24 sm:py-32">
@@ -403,29 +316,26 @@ export default function Landing() {
                 </span>
               </div>
             </div>
-            
+
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
               Transform Your Spaces
-              <span className="block text-primary mt-2">
-                With AI Staging
-              </span>
+              <span className="block text-primary mt-2">With AI Staging</span>
             </h1>
-            
+
             <p className="max-w-2xl mx-auto text-lg sm:text-xl text-muted-foreground">
-              Upload a room photo and get a watermarked staging demo in minutes, not hours.
+              Upload a room photo and get a watermarked staging demo in minutes. New Year special
+              pricing is $4 per image through January 7.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
               <Button size="lg" className="h-12 px-8 text-base" data-testid="button-get-started" asChild>
-                <Link href="/staging">
+                <a href="#auth">
                   Create Account
                   <ArrowRight className="ml-2 w-5 h-5" />
-                </Link>
+                </a>
               </Button>
               <Button size="lg" variant="outline" className="h-12 px-8 text-base" data-testid="button-try-demo" asChild>
-                <Link href="/staging">
-                  Try the Demo
-                </Link>
+                <Link href="/staging">Run a Demo</Link>
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -435,18 +345,15 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section id="features-section" className="py-20 border-t">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Simple 4-Step Process
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Simple 4-Step Process</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our streamlined workflow makes professional room staging accessible to everyone
+              Our streamlined workflow makes professional room staging accessible to everyone.
             </p>
           </div>
-          
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <Card key={index} className="hover-elevate" data-testid={`card-feature-${index}`}>
@@ -455,15 +362,11 @@ export default function Landing() {
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                       <feature.icon className="w-6 h-6 text-primary" />
                     </div>
-                    <span className="text-sm font-semibold text-muted-foreground">
-                      Step {index + 1}
-                    </span>
+                    <span className="text-sm font-semibold text-muted-foreground">Step {index + 1}</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -472,7 +375,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Benefits Section */}
       <section className="py-20 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -496,13 +398,13 @@ export default function Landing() {
                 ))}
               </ul>
               <Button size="lg" className="h-12 px-8 mt-4" data-testid="button-start-staging" asChild>
-                <Link href="/staging">
+                <a href="#auth">
                   Create Account
                   <ArrowRight className="ml-2 w-5 h-5" />
-                </Link>
+                </a>
               </Button>
             </div>
-            
+
             <div className="relative">
               <BeforeAfterSlider
                 beforeImage={emptyRoomImage}
@@ -515,25 +417,130 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 border-t">
-        <div className="max-w-4xl mx-auto px-4 text-center space-y-8">
-          <h2 className="text-3xl sm:text-4xl font-bold">
-            Ready to Transform Your Space?
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Built for realtors and designers who need fast, shareable staging previews.
-          </p>
-          <Button size="lg" className="h-14 px-10 text-lg" data-testid="button-get-started-bottom" asChild>
-            <Link href="/staging">
-              Create Account
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
-          </Button>
+      <section id="auth" className="py-20 border-t">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold">Log in or create your account</h2>
+            <p className="text-muted-foreground">Your dashboard and onboarding remain separate.</p>
+          </div>
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Login</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    autoComplete="email"
+                    value={loginForm.email}
+                    onChange={(event) =>
+                      setLoginForm((prev) => ({ ...prev, email: event.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Password</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={loginForm.password}
+                    onChange={(event) =>
+                      setLoginForm((prev) => ({ ...prev, password: event.target.value }))
+                    }
+                  />
+                </div>
+                <Button
+                  className="w-full h-11"
+                  onClick={handleLogin}
+                  disabled={isLoggingIn}
+                >
+                  {isLoggingIn ? "Logging in..." : "Log in"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Create Account</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-firm">Firm name</Label>
+                    <Input
+                      id="signup-firm"
+                      autoComplete="organization"
+                      value={signupForm.firmName}
+                      onChange={(event) =>
+                        setSignupForm((prev) => ({ ...prev, firmName: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Your name</Label>
+                    <Input
+                      id="signup-name"
+                      autoComplete="name"
+                      value={signupForm.name}
+                      onChange={(event) =>
+                        setSignupForm((prev) => ({ ...prev, name: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      autoComplete="email"
+                      value={signupForm.email}
+                      onChange={(event) =>
+                        setSignupForm((prev) => ({ ...prev, email: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-phone">Phone (optional)</Label>
+                    <Input
+                      id="signup-phone"
+                      type="tel"
+                      autoComplete="tel"
+                      value={signupForm.phone}
+                      onChange={(event) =>
+                        setSignupForm((prev) => ({ ...prev, phone: event.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    autoComplete="new-password"
+                    value={signupForm.password}
+                    onChange={(event) =>
+                      setSignupForm((prev) => ({ ...prev, password: event.target.value }))
+                    }
+                  />
+                </div>
+                <Button
+                  className="w-full h-11"
+                  onClick={handleSignup}
+                  disabled={isSigningUp}
+                >
+                  {isSigningUp ? "Creating account..." : "Create account"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center text-sm text-muted-foreground">
