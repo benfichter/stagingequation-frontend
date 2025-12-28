@@ -21,8 +21,8 @@ import OrderForm from "@/components/OrderForm";
 import OrderHistory from "@/components/OrderHistory";
 import { type DemoUser } from "@/types/demo";
 import { buildApiUrl } from "@/lib/api";
-import emptyRoomImage from "@assets/stock_images/empty_room_interior__c37a1a01.jpg";
-import stagedRoomImage from "@assets/stock_images/beautifully_staged_l_3025d9c3.jpg";
+import emptyRoomImage from "@assets/stock_images/1.jpeg";
+import stagedRoomImage from "@assets/stock_images/1_Staged.png";
 
 const BLOG_TAGS = ["All", "Workflow", "Design", "AI Tips", "Pricing"];
 
