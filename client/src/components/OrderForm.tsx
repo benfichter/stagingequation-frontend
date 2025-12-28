@@ -6,15 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { type DemoUser, type OrderCheckoutResponse } from "@/types/demo";
+import { buildApiUrl } from "@/lib/api";
 import { X } from "lucide-react";
 import { useLocation } from "wouter";
-
-const buildApiUrl = (path: string) => {
-  const base = import.meta.env.VITE_API_BASE || "/api";
-  const trimmed = base.endsWith("/") ? base.slice(0, -1) : base;
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  return `${trimmed}${normalized}`;
-};
 
 interface OrderFormProps {
   user: DemoUser;

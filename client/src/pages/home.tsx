@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import OrderForm from "@/components/OrderForm";
 import { type DemoConfig, type DemoUser, type DemoWatermarkResponse, type Dimensions } from "@/types/demo";
 import { useToast } from "@/hooks/use-toast";
+import { buildApiUrl } from "@/lib/api";
 
 const steps = [
   { id: 1, label: "Create Account" },
@@ -23,13 +24,6 @@ const steps = [
 ];
 
 const USER_STORAGE_KEY = "stagingEquationUser";
-
-const buildApiUrl = (path: string) => {
-  const base = import.meta.env.VITE_API_BASE || "/api";
-  const trimmed = base.endsWith("/") ? base.slice(0, -1) : base;
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  return `${trimmed}${normalized}`;
-};
 
 export default function Home() {
   const [currentStep, setCurrentStep] = useState(1);

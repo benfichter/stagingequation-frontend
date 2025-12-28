@@ -3,13 +3,7 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type DemoUser, type OrderListItem } from "@/types/demo";
-
-const buildApiUrl = (path: string) => {
-  const base = import.meta.env.VITE_API_BASE || "/api";
-  const trimmed = base.endsWith("/") ? base.slice(0, -1) : base;
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  return `${trimmed}${normalized}`;
-};
+import { buildApiUrl } from "@/lib/api";
 
 interface OrderHistoryProps {
   user: DemoUser;

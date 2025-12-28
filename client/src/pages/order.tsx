@@ -4,13 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type OrderDetail } from "@/types/demo";
-
-const buildApiUrl = (path: string) => {
-  const base = import.meta.env.VITE_API_BASE || "/api";
-  const trimmed = base.endsWith("/") ? base.slice(0, -1) : base;
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  return `${trimmed}${normalized}`;
-};
+import { buildApiUrl } from "@/lib/api";
 
 const statusMap: Record<string, { label: string; tone: "default" | "secondary" | "destructive" }> = {
   pending_payment: { label: "Payment pending", tone: "secondary" },

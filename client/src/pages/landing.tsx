@@ -20,6 +20,7 @@ import BeforeAfterSlider from "@/components/BeforeAfterSlider";
 import OrderForm from "@/components/OrderForm";
 import OrderHistory from "@/components/OrderHistory";
 import { type DemoUser } from "@/types/demo";
+import { buildApiUrl } from "@/lib/api";
 import emptyRoomImage from "@assets/stock_images/empty_room_interior__c37a1a01.jpg";
 import stagedRoomImage from "@assets/stock_images/beautifully_staged_l_3025d9c3.jpg";
 
@@ -71,8 +72,6 @@ const BLOG_POSTS = [
 export default function Landing() {
   const [user, setUser] = useState<DemoUser | null>(null);
   const USER_STORAGE_KEY = "stagingEquationUser";
-  const baseApi = import.meta.env.VITE_API_BASE || "/api";
-  const apiBase = baseApi.endsWith("/") ? baseApi.slice(0, -1) : baseApi;
   const [activeBlogTag, setActiveBlogTag] = useState(BLOG_TAGS[0]);
   const [blogQuery, setBlogQuery] = useState("");
   const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
@@ -118,13 +117,13 @@ export default function Landing() {
     }
     const warmMoge = async () => {
       try {
-        await fetch(`${apiBase}/moge/warm`, { method: "POST" });
+        await fetch(buildApiUrl("/moge/warm"), { method: "POST" });
       } catch {
         // ignore warmup errors
       }
     };
     warmMoge();
-  }, [user?.id, apiBase]);
+  }, [user?.id]);
 
   const handleClearAccount = () => {
     localStorage.removeItem(USER_STORAGE_KEY);
