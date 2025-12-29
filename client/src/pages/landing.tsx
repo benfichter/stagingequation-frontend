@@ -23,6 +23,7 @@ import { buildApiUrl } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import PromoBanner from "@/components/PromoBanner";
 import FullHouseLogo from "@/components/FullHouseLogo";
+import { BackgroundPaths } from "@/components/ui/background-paths";
 import emptyRoomImage from "@assets/stock_images/1.jpeg";
 import stagedRoomImage from "@assets/stock_images/1_Staged.png";
 
@@ -73,6 +74,8 @@ export default function Landing() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const { toast } = useToast();
+  const primaryActionClass =
+    "h-12 rounded-xl text-base font-semibold shadow-[0_20px_45px_rgba(96,78,255,0.35)] hover:shadow-[0_28px_70px_rgba(96,78,255,0.45)] hover:-translate-y-0.5 transition-transform";
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -241,7 +244,7 @@ export default function Landing() {
     return (
       <div className="min-h-screen bg-background">
         <PromoBanner />
-      <header className="border-b bg-background/95">
+      <header className="border-b-2 border-border/80 bg-background/95">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -313,7 +316,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <PromoBanner />
-      <header className="border-b bg-background/95">
+      <header className="border-b-2 border-border/80 bg-background/95">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <FullHouseLogo className="h-6 w-6 text-primary" />
@@ -329,59 +332,32 @@ export default function Landing() {
           </div>
         </div>
       </header>
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-background" />
-        <div className="relative max-w-6xl mx-auto px-4 py-24 sm:py-32">
-          <div className="text-center space-y-8">
-            <div className="inline-block">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/50 border border-accent-foreground/10">
-                <Sparkles className="w-4 h-4 text-accent-foreground" />
-                <span className="text-sm font-medium text-accent-foreground">
-                  AI-Powered Visual Staging
-                </span>
-              </div>
-            </div>
-
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight">
-              Transform Your Spaces
-              <span className="block text-primary mt-2">With AI Staging</span>
-            </h1>
-
-            <p className="max-w-2xl mx-auto text-lg sm:text-xl text-muted-foreground">
-              Upload a room photo and get a watermarked staging demo in minutes. New Year special
-              pricing is $4 per image through January 7.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <Button size="lg" className="h-12 px-8 text-base" data-testid="button-get-started" asChild>
-                <a href="#auth">
-                  Create Account
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </a>
-              </Button>
-              <Button size="lg" variant="outline" className="h-12 px-8 text-base" data-testid="button-try-demo" asChild>
-                <Link href="/staging">Run a Demo</Link>
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Demo previews are watermarked and match your upload resolution.
-            </p>
-          </div>
-        </div>
+      <section>
+        <BackgroundPaths title="Staging Equation" />
       </section>
 
-      <section id="features-section" className="py-20 border-t">
+      <section id="features-section" className="relative z-10 pt-20 pb-12 -mt-16 sm:-mt-20 lg:-mt-24">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Simple 4-Step Process</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <Badge variant="outline" className="mx-auto w-fit gap-2 border-primary/20 text-primary">
+              <Settings className="h-4 w-4" />
+              Workflow
+            </Badge>
+            <h2 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight">
+              Simple 4-Step Process
+            </h2>
+            <p className="mt-3 text-lg text-muted-foreground max-w-2xl mx-auto">
               Our streamlined workflow makes professional room staging accessible to everyone.
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
-              <Card key={index} className="hover-elevate" data-testid={`card-feature-${index}`}>
+              <Card
+                key={index}
+                className="hover-elevate rounded-2xl border border-primary/10 bg-white/90 shadow-[0_12px_30px_rgba(91,76,255,0.08)] transition-shadow"
+                data-testid={`card-feature-${index}`}
+              >
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -400,11 +376,15 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-20 bg-muted/30">
+      <section className="pt-12 pb-24 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
-              <h2 className="text-3xl sm:text-4xl font-bold">
+              <Badge variant="outline" className="w-fit gap-2 border-primary/20 text-primary">
+                <Sparkles className="h-4 w-4" />
+                AI results
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
                 Professional Results,
                 <span className="block text-primary">Powered by AI</span>
               </h2>
@@ -422,7 +402,11 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Button size="lg" className="h-12 px-8 mt-4" data-testid="button-start-staging" asChild>
+              <Button
+                className={`${primaryActionClass} px-8 mt-4`}
+                data-testid="button-start-staging"
+                asChild
+              >
                 <a href="#auth">
                   Create Account
                   <ArrowRight className="ml-2 w-5 h-5" />
@@ -442,127 +426,163 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="auth" className="py-20 border-t">
+      <section id="auth" className="relative py-24 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold">Log in or create your account</h2>
-            <p className="text-muted-foreground">Your dashboard and onboarding remain separate.</p>
+          <div className="text-center mb-14">
+            <Badge variant="outline" className="mx-auto w-fit gap-2 border-primary/20 text-primary">
+              <Sparkles className="h-4 w-4" />
+              Secure access
+            </Badge>
+            <h2 className="mt-4 text-3xl sm:text-4xl font-bold tracking-tight">
+              Log in or create your account
+            </h2>
+            <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
+              Your dashboard and onboarding remain separate. Save orders, track revisions, and manage
+              deliveries.
+            </p>
           </div>
-          <div className="grid lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Login</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    autoComplete="email"
-                    value={loginForm.email}
-                    onChange={(event) =>
-                      setLoginForm((prev) => ({ ...prev, email: event.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    autoComplete="current-password"
-                    maxLength={72}
-                    value={loginForm.password}
-                    onChange={(event) =>
-                      setLoginForm((prev) => ({ ...prev, password: event.target.value }))
-                    }
-                  />
-                </div>
-                <Button
-                  className="w-full h-11"
-                  onClick={handleLogin}
-                  disabled={isLoggingIn}
-                >
-                  {isLoggingIn ? "Logging in..." : "Log in"}
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Account</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-firm">Firm name</Label>
-                    <Input
-                      id="signup-firm"
-                      autoComplete="organization"
-                      value={signupForm.firmName}
-                      onChange={(event) =>
-                        setSignupForm((prev) => ({ ...prev, firmName: event.target.value }))
-                      }
-                    />
+          <div className="grid lg:grid-cols-2 gap-8">
+            <Card className="relative overflow-hidden rounded-[28px] border border-primary/10 bg-white/95 shadow-[0_24px_60px_rgba(91,76,255,0.12)]">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10" />
+              <div className="relative">
+                <CardHeader className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="border-primary/20 text-primary">
+                      Returning
+                    </Badge>
+                    <Sparkles className="h-5 w-5 text-primary" />
                   </div>
+                  <CardTitle className="text-2xl">Welcome back</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Sign in to your dashboard, orders, and billing.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Your name</Label>
+                    <Label htmlFor="login-email">Email</Label>
                     <Input
-                      id="signup-name"
-                      autoComplete="name"
-                      value={signupForm.name}
-                      onChange={(event) =>
-                        setSignupForm((prev) => ({ ...prev, name: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
+                      id="login-email"
                       type="email"
                       autoComplete="email"
-                      value={signupForm.email}
+                      className="h-11 rounded-xl border-primary/20 bg-white/80 shadow-sm focus-visible:ring-primary/30"
+                      value={loginForm.email}
                       onChange={(event) =>
-                        setSignupForm((prev) => ({ ...prev, email: event.target.value }))
+                        setLoginForm((prev) => ({ ...prev, email: event.target.value }))
                       }
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Phone (optional)</Label>
+                    <Label htmlFor="login-password">Password</Label>
                     <Input
-                      id="signup-phone"
-                      type="tel"
-                      autoComplete="tel"
-                      value={signupForm.phone}
+                      id="login-password"
+                      type="password"
+                      autoComplete="current-password"
+                      maxLength={72}
+                      className="h-11 rounded-xl border-primary/20 bg-white/80 shadow-sm focus-visible:ring-primary/30"
+                      value={loginForm.password}
                       onChange={(event) =>
-                        setSignupForm((prev) => ({ ...prev, phone: event.target.value }))
+                        setLoginForm((prev) => ({ ...prev, password: event.target.value }))
                       }
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    autoComplete="new-password"
-                    maxLength={72}
-                    value={signupForm.password}
-                    onChange={(event) =>
-                      setSignupForm((prev) => ({ ...prev, password: event.target.value }))
-                    }
-                  />
-                </div>
-                <Button
-                  className="w-full h-11"
-                  onClick={handleSignup}
-                  disabled={isSigningUp}
-                >
-                  {isSigningUp ? "Creating account..." : "Create account"}
-                </Button>
-              </CardContent>
+                  <Button className={`w-full ${primaryActionClass}`} onClick={handleLogin} disabled={isLoggingIn}>
+                    {isLoggingIn ? "Logging in..." : "Log in"}
+                  </Button>
+                </CardContent>
+              </div>
+            </Card>
+
+            <Card className="relative overflow-hidden rounded-[28px] border border-primary/10 bg-white/95 shadow-[0_24px_60px_rgba(91,76,255,0.12)]">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/10" />
+              <div className="relative">
+                <CardHeader className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="border-primary/20 text-primary">
+                      New account
+                    </Badge>
+                    <UserPlus className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-2xl">Create your profile</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Set up your firm and start staging right away.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-firm">Firm name</Label>
+                      <Input
+                        id="signup-firm"
+                        autoComplete="organization"
+                        className="h-11 rounded-xl border-primary/20 bg-white/80 shadow-sm focus-visible:ring-primary/30"
+                        value={signupForm.firmName}
+                        onChange={(event) =>
+                          setSignupForm((prev) => ({ ...prev, firmName: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name">Your name</Label>
+                      <Input
+                        id="signup-name"
+                        autoComplete="name"
+                        className="h-11 rounded-xl border-primary/20 bg-white/80 shadow-sm focus-visible:ring-primary/30"
+                        value={signupForm.name}
+                        onChange={(event) =>
+                          setSignupForm((prev) => ({ ...prev, name: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email</Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        autoComplete="email"
+                        className="h-11 rounded-xl border-primary/20 bg-white/80 shadow-sm focus-visible:ring-primary/30"
+                        value={signupForm.email}
+                        onChange={(event) =>
+                          setSignupForm((prev) => ({ ...prev, email: event.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-phone">Phone (optional)</Label>
+                      <Input
+                        id="signup-phone"
+                        type="tel"
+                        autoComplete="tel"
+                        className="h-11 rounded-xl border-primary/20 bg-white/80 shadow-sm focus-visible:ring-primary/30"
+                        value={signupForm.phone}
+                        onChange={(event) =>
+                          setSignupForm((prev) => ({ ...prev, phone: event.target.value }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      autoComplete="new-password"
+                      maxLength={72}
+                      className="h-11 rounded-xl border-primary/20 bg-white/80 shadow-sm focus-visible:ring-primary/30"
+                      value={signupForm.password}
+                      onChange={(event) =>
+                        setSignupForm((prev) => ({ ...prev, password: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <Button
+                    className={`w-full ${primaryActionClass}`}
+                    onClick={handleSignup}
+                    disabled={isSigningUp}
+                  >
+                    {isSigningUp ? "Creating account..." : "Create account"}
+                  </Button>
+                </CardContent>
+              </div>
             </Card>
           </div>
         </div>
