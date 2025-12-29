@@ -42,13 +42,13 @@ export default function HouseLoadingAnimation({
         viewBox="0 0 200 200"
         className="mb-6"
       >
-        {/* Single continuous house outline with integrated chimney */}
+        {/* Full-house logo outline with integrated chimney */}
         <path
           className="draw-path"
-          d="M 50 150 L 50 90 L 100 50 L 113 60 L 113 45 L 132 45 L 132 70 L 150 90 L 150 150 L 50 150 Z"
+          d="M 40 160 L 40 95 L 100 50 L 120 70 L 120 45 L 145 45 L 145 95 L 170 120 L 170 160 L 40 160 Z"
           fill="none"
           stroke="hsl(var(--primary))"
-          strokeWidth="5"
+          strokeWidth="6"
           strokeLinecap="round"
           strokeLinejoin="round"
         />

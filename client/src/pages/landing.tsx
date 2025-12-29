@@ -22,10 +22,12 @@ import { type DemoUser } from "@/types/demo";
 import { buildApiUrl } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import PromoBanner from "@/components/PromoBanner";
+import FullHouseLogo from "@/components/FullHouseLogo";
 import emptyRoomImage from "@assets/stock_images/1.jpeg";
 import stagedRoomImage from "@assets/stock_images/1_Staged.png";
 
 const USER_STORAGE_KEY = "stagingEquationUser";
+const isPasswordTooLong = (value: string) => new TextEncoder().encode(value).length > 72;
 
 const features = [
   {
@@ -115,6 +117,14 @@ export default function Landing() {
       });
       return;
     }
+    if (isPasswordTooLong(loginForm.password)) {
+      toast({
+        title: "Password too long",
+        description: "Use 72 characters or fewer.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoggingIn(true);
     try {
@@ -174,6 +184,14 @@ export default function Landing() {
       });
       return;
     }
+    if (isPasswordTooLong(signupForm.password)) {
+      toast({
+        title: "Password too long",
+        description: "Use 72 characters or fewer.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSigningUp(true);
     try {
@@ -223,13 +241,17 @@ export default function Landing() {
     return (
       <div className="min-h-screen bg-background">
         <PromoBanner />
-        <header className="border-b bg-background/95">
-          <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                Dashboard
-              </Badge>
+      <header className="border-b bg-background/95">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <FullHouseLogo className="h-6 w-6 text-primary" />
+              <span>Staging Equation</span>
+            </div>
+            <Badge variant="outline" className="gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Dashboard
+            </Badge>
               <span className="text-sm text-muted-foreground">Welcome back, {user.name}</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -293,7 +315,10 @@ export default function Landing() {
       <PromoBanner />
       <header className="border-b bg-background/95">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm font-semibold text-foreground">Staging Equation</div>
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <FullHouseLogo className="h-6 w-6 text-primary" />
+            <span>Staging Equation</span>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
               <Link href="/journal">Journal</Link>
@@ -447,6 +472,7 @@ export default function Landing() {
                     id="login-password"
                     type="password"
                     autoComplete="current-password"
+                    maxLength={72}
                     value={loginForm.password}
                     onChange={(event) =>
                       setLoginForm((prev) => ({ ...prev, password: event.target.value }))
@@ -522,6 +548,7 @@ export default function Landing() {
                     id="signup-password"
                     type="password"
                     autoComplete="new-password"
+                    maxLength={72}
                     value={signupForm.password}
                     onChange={(event) =>
                       setSignupForm((prev) => ({ ...prev, password: event.target.value }))

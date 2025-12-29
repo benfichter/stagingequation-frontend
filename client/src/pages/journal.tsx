@@ -7,6 +7,7 @@ import { Bookmark, Check, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import PromoBanner from "@/components/PromoBanner";
 import { type DemoUser } from "@/types/demo";
+import FullHouseLogo from "@/components/FullHouseLogo";
 
 const BLOG_TAGS = ["All", "Workflow", "Design", "AI Tips", "Pricing"];
 
@@ -101,9 +102,15 @@ export default function Journal() {
       <PromoBanner />
       <header className="border-b bg-background/95">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Studio Journal
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <FullHouseLogo className="h-6 w-6 text-primary" />
+              <span>Staging Equation</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Studio Journal
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
