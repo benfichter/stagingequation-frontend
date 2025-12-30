@@ -55,6 +55,7 @@ const features = [
 
 const benefits = [
   "$4 per image New Year special through January 7",
+  "Furnished images are sent within 24hrs and they are delivered BY EMAIL.",
   "Watermarked demo previews for quick sharing",
   "Room type and style controls",
   "Prompt-guided furnishing suggestions",
@@ -590,8 +591,13 @@ export default function Landing() {
 
       <footer className="border-t py-8">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center text-sm text-muted-foreground">
+          <div className="text-center text-sm text-muted-foreground space-y-2">
             <p>(c) 2025 Staging Equation. All rights reserved.</p>
+            <div className="flex items-center justify-center gap-4 text-xs">
+              <Link href="/terms" className="hover:text-foreground transition">
+                Terms Of Service
+              </Link>
+            </div>
           </div>
         </div>
       </footer>

@@ -12,6 +12,7 @@ import { useLocation } from "wouter";
 
 interface OrderFormProps {
   user: DemoUser;
+  prefilledFiles?: File[];
   pricePerImage?: number;
   title?: string;
   description?: string;
@@ -23,15 +24,24 @@ interface OrderFormProps {
 
 export default function OrderForm({
   user,
+  prefilledFiles,
   pricePerImage = 4,
   title = "Place Your Order",
-  description = "Upload the rooms you want staged, add a note for our team, and checkout at $4 per image.",
+  description = "Upload the rooms you want staged, add a note for our team, and checkout at $4 per image. Furnished images arrive by email within 24 hours.",
   submitLabel = "Pay & Submit Order",
   onBack,
   onCancel,
   cancelLabel = "Cancel Order",
 }: OrderFormProps) {
-  const [orderFiles, setOrderFiles] = useState<{ file: File; url: string }[]>([]);
+  const [orderFiles, setOrderFiles] = useState<{ file: File; url: string }[]>(() => {
+    if (!prefilledFiles?.length) {
+      return [];
+    }
+    return prefilledFiles.map((file) => ({
+      file,
+      url: URL.createObjectURL(file),
+    }));
+  });
   const [orderNote, setOrderNote] = useState("");
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -290,8 +300,19 @@ export default function OrderForm({
             </Button>
           </div>
 
+          <div className="rounded-xl border border-primary/10 bg-white/80 px-4 py-3 text-xs text-muted-foreground">
+            <p>
+              Furnished images are sent within 24hrs and they are delivered BY EMAIL.
+            </p>
+            <p className="mt-2">
+              We are in beta, so shit might be ass. 100% refund satisfaction guarantee. One of our
+              team members will manually review the image by HAND and email it to you ASAP. Thank you
+              for your patience.
+            </p>
+          </div>
           <p className="text-xs text-muted-foreground">
-            Orders are delivered after payment. We keep your original resolution—no upscaling promises.
+            Orders are delivered after payment. We keep your original resolution (no upscaling
+            promises).
           </p>
         </CardContent>
       </Card>

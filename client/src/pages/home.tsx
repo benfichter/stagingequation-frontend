@@ -319,6 +319,7 @@ export default function Home() {
               <div className="max-w-4xl mx-auto">
                 <OrderForm
                   user={user}
+                  prefilledFiles={uploadedFile ? [uploadedFile] : undefined}
                   description="Upload the rooms you want staged, add a note for our team, and checkout at $4 per image."
                   onBack={() => setCurrentStep(4)}
                   submitLabel="Pay & Submit Order"

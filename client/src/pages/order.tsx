@@ -8,6 +8,8 @@ import { buildApiUrl } from "@/lib/api";
 
 const statusMap: Record<string, { label: string; tone: "default" | "secondary" | "destructive" }> = {
   pending_payment: { label: "Payment pending", tone: "secondary" },
+  creating: { label: "Creating", tone: "secondary" },
+  fulfilled: { label: "Order fulfilled", tone: "default" },
   paid: { label: "Paid", tone: "default" },
   expired: { label: "Expired", tone: "destructive" },
 };
